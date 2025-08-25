@@ -85,7 +85,6 @@ class Device(threading.Thread):
     _key_count: int = 15
     _keys: list = None
     _cmds: dict = None
-    _read: bool = False
 
     def __init__(self, device, load_config: bool=True):
         self._device = device
