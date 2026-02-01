@@ -85,8 +85,8 @@ class Device(threading.Thread):
 
     _package_size_mapping: dict = {_cmd_set_key_image: 512}
     _img_rotation: int = 90
-    _img_width: int = 85
-    _img_height: int = 85
+    _img_width: int = 96
+    _img_height: int = 96
     _key_count: int = 15
     _keys: list = None
     _cmds: dict = None
