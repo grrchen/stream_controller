@@ -3,6 +3,7 @@
 import threading
 import subprocess
 import os
+import argparse
 import sys
 import io
 import time
@@ -62,6 +63,9 @@ keys = {"355499441494": (
     (obs_logo, "Start OBS", ("/opt/bin/obs",))
 )}
 """
+
+supported_devices = ((0x5548, 0x6670), (0x1500, 0x3001), (0x1500, 0x3003))
+#supported_devices = ((0x1500, 0x3001),)
 
 
 class Device(threading.Thread):
@@ -334,10 +338,6 @@ def find_devices(vendor_id, product_id):
 
 
 def main():
-    supported_devices = ((0x5548, 0x6670), (0x1500, 0x3001))
-    #supported_devices = ((0x1500, 0x3001),)
-    #supported_devices = ((0x5548, 0x6670),)
-
     for supported_device in supported_devices:
         vendor_id, product_id = supported_device
         try:
@@ -352,6 +352,17 @@ def main():
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--find-devices', action='store_true')
+    args = parser.parse_args()
+    if args.find_devices:
+        for supported_device in supported_devices:
+            vendor_id, product_id = supported_device
+            devs = usb.core.find(idVendor=vendor_id, idProduct=product_id, find_all=1)
+            for dev in devs:
+                print(f"Found supported device {dev.manufacturer} ({vendor_id}:{product_id}) with serial number {dev.serial_number} on USB port {dev.port_number}")
+        sys.exit(0)
+
     try:
         main()
     except KeyboardInterrupt:
