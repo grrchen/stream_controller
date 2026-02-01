@@ -1,2 +1,5 @@
 SUBSYSTEMS=="usb", ATTRS{idVendor}=="5548", ATTRS{idProduct}=="6670", GROUP="users", MODE="0660"
 SUBSYSTEMS=="usb", ATTRS{idVendor}=="1500", ATTRS{idProduct}=="3001", GROUP="users", MODE="0660"
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="1500", ATTRS{idProduct}=="3003", GROUP="users", MODE="0660"
+
+KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1500", ATTRS{idProduct}=="3003", MODE="0660"
