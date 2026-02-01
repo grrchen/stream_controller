@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 # Standard library imports.
 import threading
 import subprocess
