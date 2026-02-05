@@ -72,13 +72,19 @@ class Device(threading.Thread):
     _vendor_id = 0x5548
     _product_id = 0x6670
 
+    # CRT DIS -> CRT LIG -> CRT CLE -> CRT BAT -> CRT BAT -> CRT STP -> CRT BAT -> CRT STP -> CRT BAT
 
     # vvvv - commands
     _cmd_prefix: bytes = b"\x43\x52\x54\x00\x00"
+    # CRT STP
     _cmd_refresh: bytes = b"\x53\x54\x50\x00\x00"
+    # CRT BAT
     _cmd_set_key_image: bytes = b"\x42\x41\x54"
+    # CRT DIS
     _cmd_wake_screen: bytes = b"\x44\x49\x53\x00\x00"
+    # CRT CLE
     _cmd_cls: bytes = b"\x43\x4c\x45\x00\x00\x00\xff"
+    # CRT LIG
     _cmd_brightness: bytes = b"\x4c\x49\x47\x00\x00"
     # ^^^^
 
@@ -165,20 +171,11 @@ class Device(threading.Thread):
         self.clear_screen()
         self.refresh()
         self.load_config()
-        self._set_keys()
         self.refresh()
         self._read()
 
     def set_keys(self, keys):
         self._keys = keys
-
-    def _set_keys(self) -> None:
-        if self._keys is None:
-            return
-        for i, entry in enumerate(self._keys):
-            img, caption, cmd = entry
-            self.set_key_image(i+1, os.path.expanduser(img), caption)
-            self.refresh()
 
     @property
     def serial_number(self):
@@ -284,7 +281,6 @@ class Device(threading.Thread):
 
     def stop(self):
         self._stop_event.set()
-
 
 Device.set_key_mapping({
     13 : 1, 10 : 2, 7 : 3, 4 : 4,
