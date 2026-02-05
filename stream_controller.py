@@ -334,11 +334,30 @@ class Device2(Device):
 
 Device2.set_key_mapping({})
 
+
+class Device3(Device2):
+    _vendor_id = 0x1500
+    _product_id = 0x3003
+    _img_rotation: int = 90
+    _img_width: int = 95
+    _img_height:int = 95
+    _key_count: int = 15
+
+
+Device3.set_key_mapping({
+    13 : 1, 10 : 2, 7 : 3, 4 : 4,
+    1 : 5, 14 : 6,  11 : 7,  8 : 8,
+    5 : 9,  2 : 10, 15 : 11, 12 : 12,
+    9 : 13, 6 : 14, 3 : 15
+})
+
+
 threads: list = []
 
 DEVICE_CLS_MAPPING = {
     (0x5548, 0x6670): Device,
-    (0x1500, 0x3001): Device2
+    (0x1500, 0x3001): Device2,
+    (0x1500, 0x3003): Device3
 }
 
 
