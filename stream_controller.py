@@ -72,7 +72,6 @@ class Device(threading.Thread):
     _vendor_id = 0x5548
     _product_id = 0x6670
 
-    _package_size: int = 512
 
     # vvvv - commands
     _cmd_prefix: bytes = b"\x43\x52\x54\x00\x00"
@@ -83,7 +82,6 @@ class Device(threading.Thread):
     _cmd_brightness: bytes = b"\x4c\x49\x47\x00\x00"
     # ^^^^
 
-    _package_size_mapping: dict = {_cmd_set_key_image: 512}
     _img_rotation: int = 90
     _img_width: int = 96
     _img_height: int = 96
@@ -93,6 +91,7 @@ class Device(threading.Thread):
 
     def __init__(self, device, load_config: bool=True):
         self._device = device
+        self._package_size = self.ep_out.wMaxPacketSize
         self._stop_event = threading.Event()
         super().__init__()
         if load_config:
@@ -152,6 +151,14 @@ class Device(threading.Thread):
                 usb.util.endpoint_direction(e.bEndpointAddress) == \
                 usb.util.ENDPOINT_IN)
 
+    @property
+    def package_size_out(self):
+        return self.ep_out.wMaxPacketSize
+
+    @property
+    def package_size_in(self):
+        return self.ep_in.wMaxPacketSize
+
     def run(self):
         self.wake_screen()
         self.set_brightness(100)
@@ -159,6 +166,7 @@ class Device(threading.Thread):
         self.refresh()
         self.load_config()
         self._set_keys()
+        self.refresh()
         self._read()
 
     def set_keys(self, keys):
@@ -176,11 +184,13 @@ class Device(threading.Thread):
     def serial_number(self):
         return usb.util.get_string(self._device, self._device.iSerialNumber)
 
-    def send_cmd(self, cmd, package_size=512):
+    def send_cmd(self, cmd, package_size=None):
         msg = self._cmd_prefix + cmd
         self.send(msg, package_size)
 
-    def send(self, msg, package_size=512) -> None:
+    def send(self, msg, package_size=None) -> None:
+        if package_size is None:
+            package_size = self.package_size_out
         if len(msg) < package_size:
             pad = ((package_size - len(msg)) * b"\x00")
             msg = msg + pad
@@ -188,7 +198,7 @@ class Device(threading.Thread):
             logger.error("Package size exceeded")
             return
         try:
-            bytes_written = self._device.write(self.ep_out.bEndpointAddress, msg, 1000)
+            bytes_written = self._device.write(self.ep_out.bEndpointAddress, msg)
         except usb.core.USBTimeoutError as err:
             pass
 
@@ -242,7 +252,7 @@ class Device(threading.Thread):
         roated_image.save(img_byte_arr, "JPEG", subsampling=0, quality=100)
         img_data = img_byte_arr.getbuffer()
         cmd = self._cmd_set_key_image + img_data.nbytes.to_bytes(4) + self._KEY_MAPPING2.get(key, key).to_bytes(1)
-        self.send_cmd(cmd, self._package_size_mapping.get(self._cmd_set_key_image, 512))
+        self.send_cmd(cmd)
         img_byte_arr.seek(0)
         self.send_bytes(img_byte_arr)
 
@@ -257,7 +267,7 @@ class Device(threading.Thread):
     def _read(self):
         while not self._stop_event.is_set():
             try:
-                arr = self._device.read(self.ep_in.bEndpointAddress, self._package_size)
+                arr = self._device.read(self.ep_in.bEndpointAddress, self.package_size_in)
                 logger.debug(arr)
                 k = self._KEY_MAPPING.get(arr[9], arr[9])
                 self.key_pressed(k)
@@ -287,11 +297,9 @@ Device.set_key_mapping({
 class Device2(Device):
     _vendor_id = 0x1500
     _product_id = 0x3001
-    _package_size = 1024
     _img_rotation: int = -90
     _img_width: int = 70
     _img_height:int = 70
-    _package_size_mapping = {Device._cmd_set_key_image: 1024}
     _key_count: int = 6
 
 
