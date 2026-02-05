@@ -119,7 +119,10 @@ class Device(threading.Thread):
                 image_path: str = key_config.get("image", None)
                 caption: str = key_config.get("caption", None)
                 cmd: str = key_config.get("cmd", "")
-                self.set_key_config(i, image_path, caption, cmd)
+                text_pos_x: str = key_config.get("text_pos_x", "middle")
+                padding_bottom: int = int(key_config.get("padding_bottom", 0))
+                font_size: int = int(key_config.get("font_size", 14))
+                self.set_key_config(i, image_path, caption, text_pos_x, padding_bottom, font_size, cmd)
         else:
             logger.info(f"No configuration for device {serial_number} was found")
 
@@ -219,14 +222,15 @@ class Device(threading.Thread):
     def clear_screen(self):
         self.send_cmd(self._cmd_cls)
 
-    def set_key_config(self, key: int, path: str, caption: str, cmd: str):
+    def set_key_config(self, key: int, path: str, caption: str, text_pos_x: str, padding_bottom: int, font_size: int, cmd: str,):
         logger.debug(f"{key}, {path}, {caption}, {cmd}")
         self._cmds[key] = cmd
-        self.set_key_image(key, path, caption)
         self.refresh()
+        self.set_key_image(key, path, caption, text_pos_x, padding_bottom, font_size)
 
-    def set_key_image(self, key, path, caption, font=ImageFont.load_default(14)):
-        logger.debug(f"{key}, {path}, {caption}, {font}")
+    def set_key_image(self, key, path, caption, text_pos_x: str="middle", padding_bottom: int=0, font_size=14):
+        logger.debug(f"{key}, {path}, {caption}, {font_size}")
+        font = ImageFont.load_default(font_size)
         # Image width and height
         width, height = self._img_width, self._img_height
         button_img = Image.new('RGB', (width, height), "black")
@@ -243,7 +247,13 @@ class Device(threading.Thread):
             except FileNotFoundError:
                 logger.error(f"{path} not found!")
         if caption:
-            draw.text((width / 2, height / 2), caption, font=font, anchor="ms")
+            if text_pos_x== "top":
+                y  = 0
+            elif text_pos_x in ("middle", "center"):
+                y = height / 2
+            elif text_pos_x == "bottom":
+                y = height
+            draw.text((width / 2, y - padding_bottom), caption, font=font, anchor="ms")
         roated_image = button_img.rotate(self._img_rotation)
         img_byte_arr = io.BytesIO()
         roated_image.save(img_byte_arr, "JPEG", subsampling=0, quality=100)
