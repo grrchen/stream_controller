@@ -277,7 +277,10 @@ class Device(threading.Thread):
                 arr = self._device.read(self.ep_in.bEndpointAddress, self.package_size_in)
                 logger.debug(arr)
                 k = self._KEY_MAPPING.get(arr[9], arr[9])
-                self.key_pressed(k)
+                # 1 -> Key Up
+                # 0 -> Key Down
+                if arr[10] == 0:
+                    self.key_pressed(k)
                 del arr
             except usb.core.USBTimeoutError:
                 continue
@@ -308,6 +311,26 @@ class Device2(Device):
     _img_height:int = 70
     _key_count: int = 6
 
+    def _read(self):
+        while not self._stop_event.is_set():
+            try:
+                arr = self._device.read(self.ep_in.bEndpointAddress, self.package_size_in)
+                logger.debug(arr)
+                k = self._KEY_MAPPING.get(arr[9], arr[9])
+                # 1 -> Key Up
+                # 0 -> Key Down
+                if arr[10] == 1:
+                    self.key_pressed(k)
+                del arr
+            except usb.core.USBTimeoutError:
+                continue
+            except Exception as err:
+                tb = traceback.format_exc()
+                logger.error(f"read error: {tb}")
+                #self._running = False
+        self.clear_screen()
+        self.refresh()
+        usb.util.dispose_resources(self._device)
 
 Device2.set_key_mapping({})
 
