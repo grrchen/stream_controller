@@ -269,7 +269,7 @@ class Device(threading.Thread):
         else:
             cmd = " ".join(self._keys[key-1][2])
         logger.info(f"executing cmd: {cmd}")
-        subprocess.Popen(cmd, shell=True)
+        subprocess.Popen(cmd, shell=True, start_new_session=True)
 
     def _read(self):
         while not self._stop_event.is_set():
