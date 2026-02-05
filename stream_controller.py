@@ -24,6 +24,7 @@ import configparser
 import usb.core
 import usb.util
 import usb.backend.libusb1
+import usb.backend.openusb
 from PIL import Image, ImageFont, ImageDraw
 
 # Local application/library specific imports.
@@ -366,7 +367,7 @@ def find_devices(vendor_id, product_id):
     # find our device
     #backend = usb.backend.libusb1.get_backend(find_library=lambda x: "/usr/lib/x86_64-linux-gnu/libusb-1.0.so.0")
     #devs = usb.core.find(idVendor=0x5548, idProduct=0x6670, find_all=1, backend=backend)
-    devs = usb.core.find(idVendor=vendor_id, idProduct=product_id, find_all=1)
+    devs = usb.core.find(idVendor=vendor_id, idProduct=product_id, find_all=1, backend=usb.backend.openusb.get_backend())
     for dev in devs:
         logger.info(f"Found supported device: {dev}")
         dev.reset()
